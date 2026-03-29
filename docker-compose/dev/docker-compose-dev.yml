@@ -2,12 +2,13 @@ version: "3.7"
 
 volumes:
    tiledesk-datadb:
+   evolution-pgdata:
 services:
   dashboard:
-   image: tiledesk/tiledesk-dashboard:2.2.92
-   container_name: tiledesk-dashboard 
+   build: ../../vertify-dashboard
+   container_name: tiledesk-dashboard
    environment: 
-      - FEATURES_TOKEN=PAY:F-ANA:F-ACT:F-TRI:T-GRO:F-DEP:F-OPH:F-MTL:T-CAR:F-V1L:T-PSA:F-MTT:T-SUP:T-LBS:T-APP:T-DEV:F-NOT:T-IPS:F-ETK:F-RAS:T-PPB:F-PET:F-MTS:F-TIL:T-DGF:T-NAT:T-HPB:F-TOW:T-KNB:F-BAN:F-AST:F-MON:F-CNT:F-AUT:F
+      - FEATURES_TOKEN=PAY:F-ANA:T-ACT:T-TRI:T-GRO:T-DEP:T-OPH:T-MTL:T-CAR:T-V1L:T-PSA:T-MTT:T-SUP:T-LBS:T-APP:T-DEV:T-NOT:T-IPS:T-ETK:T-RAS:T-PPB:F-PET:F-MTS:F-TIL:T-DGF:T-NAT:T-HPB:F-TOW:T-KNB:T-BAN:F-AST:F-MON:T-CNT:T-AUT:T-INT:T
       - BOT_CREDENTIAL_URL=/api/modules/dialogflow/botcredendials/
       - RASA_BOT_CREDENTIAL_URL=http://localhost:3000/modules/rasa/botcredendials/
       - "WIDGET_LOCATION=${EXTERNAL_BASE_URL}/widget/"
@@ -36,12 +37,13 @@ services:
       - "4500:80" #use expose if you want to block external access
 
   cds:
-    image: tiledesk/design-studio:1.0.6
+    build: ../../design-studio
     container_name: tiledesk-cds 
     environment: 
       - FEATURES_TOKEN=PAY:F-ANA:F-ACT:F-TRI:T-GRO:F-DEP:F-OPH:F-MTL:T-CAR:F-V1L:T-PSA:F-MTT:T-SUP:T-LBS:T-APP:T-DEV:F-NOT:T-IPS:F-ETK:F-RAS:T-PPB:F-PET:F-MTS:F-TIL:T-DGF:T-NAT:T-HPB:F-TOW:T-KNB:F-BAN:F-AST:F-MON:F-CNT:F-AUT:F
       - "WIDGET_LOCATION=${EXTERNAL_BASE_URL:-http://localhost:8081}/widget/"
       - "API_URL=${EXTERNAL_BASE_URL:-http://localhost:8081}/api/"
+      - SERVER_BASE_URL=/api/
       - DASHBOARD_URL=/dashboard/
       - WS_URL
       - WS_URL_RELATIVE=/ws/
@@ -63,7 +65,7 @@ services:
       - "4502:80" #use expose if you want to block external access
 
   webwidget:
-   image: chat21/chat21-web-widget:5.0.70
+   build: ../../chat21-web-widget
    container_name: chat21-web-widget  
    ports: 
       - "4200:80" # specify port forewarding
@@ -93,14 +95,14 @@ services:
       - ENBED_JS=true
 
   ionic:
-   image: chat21/chat21-ionic:3.0.106
+   build: ../../chat21-ionic
    container_name: chat21-ionic
    ports:
       - "8080:80" #use expose if you want to block external access   
    environment: 
       - DASHBOARD_URL=/dashboard/   
-      - API_BASEIMAGE_URL=http://localhost:3000/
-      - API_URL=http://localhost:3000/
+      - API_BASEIMAGE_URL=/api/
+      - SERVER_BASE_URL=/api/
       - FEATURES_TOKEN=PAY:F-ANA:F-ACT:F-TRI:T-GRO:F-DEP:F-OPH:F-MTL:T-CAR:F-V1L:T-PSA:F-MTT:T-SUP:T-LBS:T-APP:T-DEV:F-NOT:T-IPS:F-ETK:F-RAS:T-PPB:F-PET:F-MTS:F-TIL:T-DGF:T-NAT:T-HPB:F-TOW:T-KNB:F-BAN:F-AST:F-MON:F-CNT:F-AUT:F
       - WIDGET_LOCATION=/widget/
       - PUSH_ENGINE=none
@@ -108,9 +110,8 @@ services:
       - FILE_UPLOAD_ACCEPT=*/*
       - CHAT21_ENGINE=mqtt
       - MQTT_APPID=tilechat
-      - "MQTT_ENDPOINT=${EXTERNAL_MQTT_BASE_URL}/mqws/ws"
+      - "MQTT_ENDPOINT=${EXTERNAL_MQTT_BASE_URL:-ws://localhost:8081}/mqws/ws"
       - MQTT_APIENDPOINT=/chatapi/api
-      #- MQTT_LOGINSERVICE_ENDPOINT=/api/chat21/native/auth/createCustomToken
       - UPLOAD_ENGINE=native
       - FIREBASE_APIKEY
       - FIREBASE_AUTHDOMAIN
@@ -125,8 +126,7 @@ services:
       - ARCHIVED_BUTTON=true
       - AUTH_PERSISTENCE=LOCAL
       - CHAT_STORAGE_PREFIX=chat_sv5
-      #- WS_URL_RELATIVE=/ws/
-      - WS_URL=ws://localhost:3000/
+      - WS_URL_RELATIVE=/ws/
 
   proxy:
     image: tiledesk/tiledesk-docker-proxy:v1.1.2
@@ -140,10 +140,11 @@ services:
       - chat21httpserver
       - rabbitmq
       - cds
+      - ionic
     command: [nginx-debug, '-g', 'daemon off;']
     
   server:
-    image: tiledesk/tiledesk-server:2.3.89
+    build: ../../vertify-server
     container_name: tiledesk-server
     restart: always       
     environment: 
@@ -186,10 +187,22 @@ services:
       - BASE_FILE_URL=http://localhost:3000/
       - OPENAI_ENDPOINT
       - KB_ENDPOINT
+      - "EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://evolution-api:8080}"
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-evolution_api_key_default}
+      - "EVOLUTION_WEBHOOK_URL=${EVOLUTION_WEBHOOK_URL:-https://1e99-2804-7f0-9002-a538-4f7e-1a23-87f9-f40e.ngrok-free.app/modules/evolution-api/webhook}"
+      - AMQP_MANAGER_URL=amqp://ignored:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMjM1OTFmZS05N2FhLTRmNWQtOGVlOS0yNjQ2NzljYmM0M2YiLCJzdWIiOiIxMDAtQVBJQURNSU4iLCJzY29wZSI6WyJyYWJiaXRtcS5yZWFkOiovKi8qIiwicmFiYml0bXEud3JpdGU6Ki8qLyoiLCJyYWJiaXRtcS5jb25maWd1cmU6Ki8qLyoiXSwiY2xpZW50X2lkIjoiMTAwLUFQSUFETUlOIiwiY2lkIjoiMTAwLUFQSUFETUlOIiwiYXpwIjoiMTAwLUFQSUFETUlOIiwidXNlcl9pZCI6IjEwMC1BUElBRE1JTiIsImFwcF9pZCI6InRpbGVjaGF0IiwiaWF0IjoxNjk2NDkyMjg3LCJleHAiOjIwMDc1MzIyODcsImF1ZCI6WyJyYWJiaXRtcSIsIjEwMC1BUElBRE1JTiJdLCJraWQiOiJ0aWxlZGVzay1rZXkiLCJ0aWxlZGVza19hcGlfcm9sZXMiOiJhZG1pbiJ9.Ee-TpAPsoC7Dm7qsbUojeHud3E4OCtJZkpupu_R0Aic@rabbitmq:5672?heartbeat=60
+    volumes:
+      - ../../vertify-server/pubmodules:/usr/src/app/pubmodules
+      - ../../vertify-server/event:/usr/src/app/event
+      - ../../vertify-server/routes:/usr/src/app/routes
+      - ../../vertify-server/websocket:/usr/src/app/websocket
+      - ../../vertify-server/channels:/usr/src/app/channels
     depends_on:
       - mongo
+      - redis
+      - rabbitmq
     ports:
-      - "4000:4000"
+      - "3000:3000"
 
   chat21httpserver:
     image: chat21/chat21-http-server:0.2.34
@@ -229,15 +242,17 @@ services:
       #ufficio
       #- WEBHOOK_ENDPOINTS=http://192.168.1.13:3000/chat21/requests,http://chat21httpserver:8004/api/tilechat/push/webhook/endpoint/WHFyAhecCMkYsvldLFWbSrJt7lAZFAmrp7O5QVMvGQsLVn9SkfT
       #casa
-      - WEBHOOK_ENDPOINTS=http://192.168.1.232:3000/chat21/requests,http://chat21httpserver:8004/api/tilechat/push/webhook/endpoint/WHFyAhecCMkYsvldLFWbSrJt7lAZFAmrp7O5QVMvGQsLVn9SkfT
+      #- WEBHOOK_ENDPOINTS=http://192.168.1.232:3000/chat21/requests,http://chat21httpserver:8004/api/tilechat/push/webhook/endpoint/WHFyAhecCMkYsvldLFWbSrJt7lAZFAmrp7O5QVMvGQsLVn9SkfT
+      - WEBHOOK_ENDPOINTS=http://server:3000/chat21/requests,http://chat21httpserver:8004/api/tilechat/push/webhook/endpoint/WHFyAhecCMkYsvldLFWbSrJt7lAZFAmrp7O5QVMvGQsLVn9SkfT
       
       - WEBHOOK_ENABLED=true
       - WEBHOOK_EVENTS=message-sent,conversation-unarchived
-      - RABBITMQ_URI=amqp://ignored:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDI2NjU0Ni05ZGMxLTQ3MzgtOWE5OC01OTQwYWFmZWJkMjgiLCJzdWIiOiIwMS1PQlNFUlZFUiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qLyoiLCJyYWJiaXRtcS53cml0ZToqLyovKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIwMS1PQlNFUlZFUiIsImNpZCI6IjAxLU9CU0VSVkVSIiwiYXpwIjoiMDEtT0JTRVJWRVIiLCJ1c2VyX2lkIjoiMDEtT0JTRVJWRVIiLCJhcHBfaWQiOiJ0aWxlY2hhdCIsImlhdCI6MTU5Mzg1OTgzNiwiZXhwIjoxNjk2NDUxODM2LCJhdWQiOlsicmFiYml0bXEiLCIwMS1PQlNFUlZFUiJdLCJraWQiOiJ0aWxlZGVzay1rZXkiLCJ0aWxlZGVza19hcGlfcm9sZXMiOiJ1c2VyIn0.N6bs-WXVZJTNW2jztzph4SYc9_Szs0cb0kBM9n0k8hY@rabbitmq:5672?heartbeat=60
+      - RABBITMQ_URI=amqp://ignored:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDI2NjU0Ni05ZGMxLTQ3MzgtOWE5OC01OTQwYWFmZWJkMjgiLCJzdWIiOiIwMS1PQlNFUlZFUiIsInNjb3BlIjpbInJhYmJpdG1xLnJlYWQ6Ki8qLyoiLCJyYWJiaXRtcS53cml0ZToqLyovKiIsInJhYmJpdG1xLmNvbmZpZ3VyZToqLyovKiJdLCJjbGllbnRfaWQiOiIwMS1PQlNFUlZFUiIsImNpZCI6IjAxLU9CU0VSVkVSIiwiYXpwIjoiMDEtT0JTRVJWRVIiLCJ1c2VyX2lkIjoiMDEtT0JTRVJWRVIiLCJhcHBfaWQiOiJ0aWxlY2hhdCIsImlhdCI6MTc3NDU3MDkyNywiZXhwIjoyMDg5OTMwOTI3LCJhdWQiOlsicmFiYml0bXEiLCIwMS1PQlNFUlZFUiJdLCJraWQiOiJ0aWxlZGVzay1rZXkiLCJ0aWxlZGVza19hcGlfcm9sZXMiOiJ1c2VyIn0.88EoBW1utKhF0iWUOayJbRdNpdgp3nsiqnd1PcsrSJs@rabbitmq:5672?heartbeat=60
     depends_on:
       - mongo
       - rabbitmq
       - server 
+  
   rabbitmq:
     image: chat21/chat21-rabbitmq
     container_name: rabbitmq
@@ -255,17 +270,67 @@ services:
     #     interval: 5s
     #     timeout: 15s
     #     retries: 1
+  
+  redis:
+    container_name: redis
+    image: redis:6-alpine
+
   mongo:
     container_name: mongo
     image: mongo:4.0.23
     command: --bind_ip_all
+    ports:
+      - "27017:27017"
     volumes:
-      - tiledesk-datadb:/data/db    
+      - tiledesk-datadb:/data/db
 
+
+  evolution-api:
+    image: atendai/evolution-api:v2.2.3
+    container_name: evolution-api
+    restart: always
+    ports:
+      - "8082:8080"
+    environment:
+      - "SERVER_URL=${EXTERNAL_BASE_URL:-http://localhost:8081}"
+      - SERVER_PORT=8080
+      - AUTHENTICATION_TYPE=apikey
+      - "AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-evolution_api_key_default}"
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution:evolution@evolution-postgres:5432/evolution
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution_v2
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
+      - DATABASE_SAVE_MESSAGE_UPDATE=true
+      - DATABASE_SAVE_DATA_CONTACTS=true
+      - DATABASE_SAVE_DATA_CHATS=true
+      - DEL_INSTANCE=false
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379
+      - LOG_LEVEL=ERROR,WARN,DEBUG,INFO,LOG,VERBOSE,DARK,WEBHOOKS
+      - LOG_COLOR=true
+      - LOG_BAILEYS=error
+    depends_on:
+      - evolution-postgres
+      - redis
+
+  evolution-postgres:
+    image: postgres:15-alpine
+    container_name: evolution-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=evolution
+      - POSTGRES_PASSWORD=evolution
+      - POSTGRES_DB=evolution
+    volumes:
+      - evolution-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   #ngrok:
   #  container_name: ngrok
   #  image: wernight/ngrok
-  #  command: ngrok http server:3000    
+  #  command: ngrok http server:3000
   #  ports:
   #   -  '4040:4040'

@@ -1,0 +1,15 @@
+[submodule "vertify-dashboard"]
+	path = vertify-dashboard
+	url = git@github.com:joa7b/vertify-dashboard.git
+[submodule "design-studio"]
+	path = design-studio
+	url = git@github.com:joa7b/design-studio.git
+[submodule "chat21-web-widget"]
+	path = chat21-web-widget
+	url = git@github.com:joa7b/chat21-web-widget.git
+[submodule "chat21-ionic"]
+	path = chat21-ionic
+	url = git@github.com:joa7b/chat21-ionic.git
+[submodule "vertify-server"]
+	path = vertify-server
+	url = git@github.com:joa7b/vertify-server.git
