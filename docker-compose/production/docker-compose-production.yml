@@ -167,7 +167,7 @@ services:
       - EMAIL_PORT
       - EMAIL_PASSWORD
       - EMAIL_FROM_ADDRESS
-      - "EMAIL_BASEURL=${EXTERNAL_BASE_URL}/dashboard"
+      - EMAIL_BASEURL
       - "WEBHOOK_ORIGIN=${EXTERNAL_BASE_URL}/"
       - "WIDGET_LOCATION=${EXTERNAL_BASE_URL}/widget/"
       - WS_SERVER_PATH
@@ -270,7 +270,7 @@ services:
       - tiledesk-datadb:/data/db
 
   evolution-api:
-    image: atendai/evolution-api:v2.2.3
+    image: atendai/evolution-api:latest
     container_name: evolution-api
     restart: always
     ports:
@@ -295,6 +295,7 @@ services:
       - LOG_LEVEL=ERROR,WARN,DEBUG,INFO,LOG,VERBOSE,DARK,WEBHOOKS
       - LOG_COLOR=true
       - LOG_BAILEYS=error
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1035194821
     depends_on:
       - evolution-postgres
       - redis
