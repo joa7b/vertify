@@ -20,13 +20,13 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "$SERVER" bash <<EOF
   set -e
   cd ~
   echo "-- Pull das novas imagens..."
-  sudo docker compose -f docker-compose-production.yml pull server cds
+  sudo docker compose -f docker-compose-production.yml pull server cds dashboard
   echo "-- Restart dos containers atualizados..."
-  sudo docker compose -f docker-compose-production.yml up -d --no-deps server cds
+  sudo docker compose -f docker-compose-production.yml up -d --no-deps server cds dashboard
   echo "-- Reiniciando proxy (atualiza resolução de IP dos containers)..."
   sudo docker compose -f docker-compose-production.yml restart proxy
   echo "-- Status final:"
-  sudo docker compose -f docker-compose-production.yml ps server cds proxy
+  sudo docker compose -f docker-compose-production.yml ps server cds dashboard proxy
 EOF
 
 echo ""
